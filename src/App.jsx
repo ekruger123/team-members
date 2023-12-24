@@ -3,12 +3,16 @@ import './App.css';
 import Header from './header';
 import Employees from './employees';
 import Footer from './footer';
-import { useState } from 'react';
+import GroupedTeamMembers from './groupedTeamMembers';
+import Nav from './nav';
+import NotFound from './notFound';
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 
 function App() {
-    const [selectedTeam, setTeam] = useState("TeamB");
+    const [selectedTeam, setTeam] = useState(JSON.parse(localStorage.getItem('selectedTeam')) ||"TeamB");
 
-    const [employees, setEmployees] = useState([{
+    const [employees, setEmployees] = useState(JSON.parse(localStorage.getItem('employeeList')) || [{
         id: 1,
         fullName: "Bob Jones",
         designation: "JavaScript Developer",
@@ -93,6 +97,14 @@ function App() {
         teamName: "TeamD"
       }]);
 
+      useEffect(() => {
+        localStorage.setItem('employeeList', JSON.stringify(employees));
+      }, [employees]);
+
+      useEffect(() => {
+        localStorage.setItem('selectedTeam', JSON.stringify(selectedTeam));
+      }, [selectedTeam]);
+
       const handleTeamSelectionChange = (event) => {
         console.log(event.target.value);
         setTeam(event.target.value);
@@ -109,15 +121,30 @@ function App() {
         
       }
   return (
-    <div>
-      <Header />
-      <Employees employees={employees}
+    <Router>
+      <Nav />
+      <Header selectedTeam={selectedTeam}
+              teamMemberCount={employees.filter((employee) => employee.teamName === selectedTeam).length}/>
+    <Routes> 
+      <Route path='/'
+              element={<Employees employees={employees}
                  selectedTeam={selectedTeam}
                  handleEmployeeCardClick={handleEmployeeCardClick}
                  handleTeamSelectionChange={handleTeamSelectionChange}
-                 />
-      <Footer />
-    </div>
+                 />}>
+      </Route> 
+
+      <Route path='/GroupedTeamMembers'
+              element={<GroupedTeamMembers employees={employees} selectedTeam={selectedTeam} setTeam={setTeam} />}>
+      </Route>
+
+      <Route path='*'
+              element={<NotFound />}>
+      </Route>
+      
+     </Routes>  
+     <Footer />
+    </Router>
   );
 }
 
